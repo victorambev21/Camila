@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cardápio</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            text-align: center;
+            background-color: #001f3f;
+            color: white;
+        }
+        .container {
+            max-width: 600px; 
+            margin: auto;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 15px #00bfff;
+        }
+        .logo-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .logo-container img {
+            width: 100px;
+            height: auto;
+        }
+        .logo-container h1 {
+            font-size: 24px;
+            color: #00bfff;
+            margin-top: 10px;
+            text-shadow: 0 0 10px #00bfff;
+        }
+        input, select {
+            width: calc(100% - 20px);
+            padding: 10px;
+            margin: 5px 0;
+            border: none;
+            border-radius: 5px;
+        }
+        .btn {
+            padding: 10px 15px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        
+        }
+        .product img {
+            width: 80%;
+            height: auto;
+        }
+        .product .btn {
+    margin-top: 8 px; /* Ajusta o espaço acima do botão */
+    padding: 10px 15px;
+    width: 100%; /* Faz o botão ocupar toda a largura */
+}
+    </style>
+</head>
+<body>
+    <div class="logo-container">
+        <img src="LOGO.PNG.png" alt="Logo MASF Sem Fronteiras">
+        <h1>MASF BTS</h1>
+    </div>
+    
+    <div class="container" id="form-container">
+        <h2>Informe seus dados para iniciar</h2>
+        <input type="text" id="nome" placeholder="Seu Nome" required>
+        <input type="text" id="endereco" placeholder="Bairro, Rua, Número" required>
+        <input type="text" id="telefone" placeholder="Telefone" required>
+        <select id="pagamento">
+            <option value="">Selecione a forma de pagamento</option>
+            <option value="Dinheiro">Dinheiro</option>
+            <option value="Cartão de Crédito">Cartão de Crédito</option>
+            <option value="Pix">Pix</option>
+        </select>
+        <button class="btn" onclick="iniciarCatalogo()">Continuar</button>
+    </div>
+
+    <!-- Catálogo de Produtos -->
+    <div id="catalog-container" class="hidden">
+        <h2>Catálogo de Vendas</h2>
+        <div class="container" id="catalog"></div>
+
+        <div class="cart">
+            <h3>🛒 Carrinho</h3>
+            <div id="cart-items"></div>
+            <p><strong>Total:</strong> R$ <span id="total-price">0.00</span></p>
+            <button class="btn" onclick="finalizarPedido()">Finalizar Pedido no WhatsApp</button>
+        </div>
+    </div>
+
+    <script>
+        let nomeCliente = "";
+        let enderecoCliente = "";
+        let telefoneCliente = "";
+        let pagamentoCliente = "";
+        let carrinho = [];
+
+       
+
+        const produtos = [
+            { 
+                id: 1, 
+                nome: "Frango Assado", 
+                preco: 50.00, 
+                img: "https://s2-receitas.glbimg.com/mWLQ-cXDkVy7iRPCNCQuzAZhO2U=/1200x/smart/filters:cover():strip_icc()/i.s3.glbimg.com/v1/AUTH_1f540e0b94d8437dbbc39d567a1dee68/internal_photos/bs/2024/S/A/SENDDDQPOCGiQbGUzu4A/frango-assado-de-padaria.jpg", 
+                acompanhamentos: "Uma porção de Vatapá, Baião de Dois, Farofa, Vinagrete e uma pequena porção de Banana Frita."
+            },
+            { 
+                id: 2, 
+                nome: "Peixe Assado", 
+                preco: 50.00, 
+                img: "https://claudia.abril.com.br/wp-content/uploads/2020/02/receber-agosto12.jpg?quality=70&strip=info&crop=1&resize=1080,565", 
+                acompanhamentos: "Uma porção de Vatapá, Baião de Dois, Farofa, Vinagrete e uma pequena porção de Banana Frita."
+            }
+        ];
+        
+        
+        function iniciarCatalogo() {
+            nomeCliente = document.getElementById("nome").value.trim();
+            enderecoCliente = document.getElementById("endereco").value.trim();
+            telefoneCliente = document.getElementById("telefone").value;
+            pagamentoCliente = document.getElementById("pagamento").value;
+
+            if (!nomeCliente || !enderecoCliente || !pagamentoCliente) {
+                alert("Por favor, preencha todos os campos antes de continuar.");
+                return;
+            }
+
+            document.getElementById("form-container").classList.add("hidden");
+            document.getElementById("catalog-container").classList.remove("hidden");
+            carregarProdutos();
+        }
+
+        function carregarProdutos() {
+            const catalog = document.getElementById("catalog");
+            catalog.innerHTML = "";  // Limpa o catálogo para exibir os produtos novamente
+
+            produtos.forEach(produto => {
+                catalog.innerHTML += `
+                    <div class="product">
+                        <img src="${produto.img}" alt="${produto.nome}">
+                        <h3>${produto.nome}</h3>
+                        <p><strong>Acompanhamentos:</strong> ${produto.acompanhamentos}</p>
+                        <p>R$ ${produto.preco.toFixed(2)}</p>
+                        <button class="btn" onclick="adicionarAoCarrinho(${produto.id})">Adicionar ao Carrinho</button>
+                    </div>
+                `;
+            });
+        }
+
+        function adicionarAoCarrinho(id) {
+            const produto = produtos.find(p => p.id === id);
+            const itemExistente = carrinho.find(item => item.id === id);
+
+            if (itemExistente) {
+                itemExistente.quantidade += 1;
+            } else {
+                carrinho.push({ ...produto, quantidade: 1 });
+            }
+
+            atualizarCarrinho();
+        }
+
+        function removerDoCarrinho(id) {
+            carrinho = carrinho.filter(item => item.id !== id);
+            atualizarCarrinho();
+        }
+
+        function atualizarCarrinho() {
+            const cartItems = document.getElementById("cart-items");
+            const totalPrice = document.getElementById("total-price");
+
+            cartItems.innerHTML = "";
+            let total = 0;
+
+            carrinho.forEach(item => {
+                total += item.preco * item.quantidade;
+                cartItems.innerHTML += `
+                    <div class="cart-item">
+                        <span>${item.nome} (${item.quantidade}x) - R$ ${(item.preco * item.quantidade).toFixed(2)}</span>
+                        <button class="btn btn-remove" onclick="removerDoCarrinho(${item.id})">Remover</button>
+                    </div>
+                `;
+            });
+
+            totalPrice.innerText = total.toFixed(2);
+        }
+
+        function finalizarPedido() {
+            if (carrinho.length === 0) {
+                alert("Seu carrinho está vazio!");
+                return;
+            }
+
+            let mensagem = `Olá! Quero fazer um pedido:\n`;
+            mensagem += `👤 Nome: ${nomeCliente}\n🏠 Endereço: ${enderecoCliente}\n📞Telefone: ${telefoneCliente}\n💳 Pagamento: ${pagamentoCliente}\n\n📌 Pedido:\n`;
+
+            carrinho.forEach(item => {
+                mensagem += `• ${item.quantidade}x ${item.nome} - R$ ${(item.preco * item.quantidade).toFixed(2)}\n`;
+            });
+
+            const numeroWhatsApp = "9295231483"; // Coloque o número do restaurante aqui
+            const url = `https://wa.me/${numeroWhatsApp}?text=${encodeURIComponent(mensagem)}`;
+
+            window.open(url, "_blank");
+        }
+    </script>
+
+</body>
+</html>
